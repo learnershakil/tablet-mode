@@ -70,6 +70,20 @@ get_monitor_refresh() {
     ' | head -n 1
 }
 
+lua_quote() {
+    jq -Rrn --arg value "$1" '$value | @json'
+}
+
+hypr_swap_active_workspaces() {
+    local monitor_a monitor_b monitor_a_lua monitor_b_lua
+    monitor_a="$1"
+    monitor_b="$2"
+    monitor_a_lua=$(lua_quote "$monitor_a")
+    monitor_b_lua=$(lua_quote "$monitor_b")
+
+    hyprctl eval "hl.dispatch(hl.dsp.workspace.swap_monitors({ monitor1 = $monitor_a_lua, monitor2 = $monitor_b_lua }))"
+}
+
 restart_portals() {
     # Ensure systemd user services inherit our current Wayland env.
     # This matters when starting from wofi/rofi or other shells.
@@ -304,7 +318,7 @@ swap_screens() {
     HEADLESS=$(hyprctl monitors -j | jq -r '.[] | select(.name | startswith("HEADLESS-")) | .name' | head -n 1)
     PRIMARY_MONITOR=$(get_primary_monitor)
     if [ -n "$HEADLESS" ] && [ -n "$PRIMARY_MONITOR" ]; then
-        hyprctl dispatch swapactiveworkspaces "$PRIMARY_MONITOR" "$HEADLESS"
+        hypr_swap_active_workspaces "$PRIMARY_MONITOR" "$HEADLESS"
     fi
 }
 
