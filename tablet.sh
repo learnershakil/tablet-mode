@@ -207,6 +207,11 @@ start_tablet() {
     export XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP:-Hyprland}
     export XDG_SESSION_TYPE=${XDG_SESSION_TYPE:-wayland}
 
+    # Ensure any active Sunshine session is stopped BEFORE removing headless outputs
+    # to avoid wlr-screencopy buffer commit races during headless output destruction.
+    pkill -x sunshine 2>/dev/null || true
+    sleep 1
+
     # Keep things predictable across repeated starts.
     if [ "${TABLET_CLEAN_HEADLESS:-1}" = "1" ]; then
         cleanup_headless_outputs
